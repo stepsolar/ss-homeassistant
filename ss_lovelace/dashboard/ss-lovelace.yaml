@@ -1,0 +1,156 @@
+title: Solar
+views:
+  - theme: Backend-selected
+    title: Solar Power
+    path: solarpower
+    icon: mdi:solar-power-variant
+    badges: []
+    cards:
+      - type: custom:config-template-card
+        entities:
+          - sensor.sunrise
+          - sensor.sunset
+          - sensor.autoconsumo_oggi
+          - sensor.produzione_totale_oggi
+          - sensor.solar_noon
+          - sensor.produzione_power
+          - sensor.meter_energy_negative
+        variables: null
+        card:
+          type: vertical-stack
+          cards:
+            - type: horizontal-stack
+              cards:
+                - hours_to_show: 24
+                  graph: none
+                  type: sensor
+                  entity: sensor.autoconsumo_oggi
+                  detail: 2
+                - hours_to_show: 24
+                  graph: none
+                  type: sensor
+                  detail: 2
+                  entity: sensor.produzione_totale_oggi
+            - type: horizontal-stack
+              cards:
+                - type: custom:apexcharts-card
+                  update_interval: 1min
+                  graph_span: 15h
+                  span:
+                    start: day
+                    offset: +5h, +30m
+                  header:
+                    show: true
+                    show_states: true
+                    colorize_states: true
+                  all_series_config:
+                    group_by:
+                      func: avg
+                      duration: 2min
+                  apex_config:
+                    annotations:
+                      xaxis:
+                        - x: >-
+                            ${new
+                            Date(states['sensor.sunrise'].state).getTime()}
+                          label:
+                            text: ☀️
+                            borderWidth: 0
+                            style:
+                              background: '#0000'
+                              fontSize: 18px
+                            offsetY: 100
+                            offsetX: 0
+                            orientation: orizontal
+                        - x: >-
+                            ${new
+                            Date(states['sensor.solar_noon'].state).getTime()}
+                          label:
+                            text: ☀️
+                            borderWidth: 0
+                            style:
+                              background: '#0000'
+                              fontSize: 18px
+                            offsetY: 15
+                            offsetX: 0
+                            orientation: orizontal
+                        - x: ${new Date(states['sensor.sunset'].state).getTime()}
+                          label:
+                            text: 🌙
+                            borderWidth: 0
+                            style:
+                              background: '#0000'
+                              fontSize: 18px
+                            offsetY: 100
+                            offsetX: 0
+                            orientation: orizontal
+                    title:
+                      text: ⚡ POWER
+                      color: white
+                      style:
+                        fontSize: 28px
+                        fontWeight: 700
+                    chart:
+                      height: 350
+                      zoom:
+                        type: x
+                        enabled: true
+                        autoScaleYaxis: false
+                      toolbar:
+                        show: true
+                        autoSelected: zoom
+                      xaxis.type: datetime
+                    stroke:
+                      width: 1
+                      curve: smooth
+                    legend:
+                      show: false
+                  series:
+                    - entity: sensor.produzione_power
+                      yaxis_id: Wh
+                      color: orange
+                      name: Produzione Ieri
+                      offset: '-1d'
+                      opacity: 0.3
+                      show:
+                        in_header: before_now
+                    - entity: sensor.produzione_power
+                      yaxis_id: Wh
+                      color: gold
+                      type: area
+                      name: Produzione Oggi
+                      extend_to: false
+                      stroke_width: 3
+                      opacity: 0.5
+                    - entity: sensor.meter_energy_negative
+                      yaxis_id: Wh
+                      color: lightblue
+                      type: area
+                      name: Immissione
+                      extend_to: false
+                      transform: return x * -1
+                      stroke_width: 3
+                      opacity: 0.5
+            - type: horizontal-stack
+              cards:
+                - type: custom:mushroom-chips-card
+                  chips:
+                    - type: template
+                      content: >-
+                        Alba  {% if states.sun.sun %} {{
+                        (as_timestamp(states.sun.sun.attributes.next_rising)) |
+                        timestamp_custom(('%H:%M') )}} {% endif %}
+                      icon: mdi:weather-sunset-up
+                    - type: template
+                      content: >-
+                        Mezzogiorno  {% if states.sun.sun %} {{
+                        (as_timestamp(states.sun.sun.attributes.next_noon)) |
+                        timestamp_custom(('%H:%M') )}} {% endif %}
+                      icon: mdi:weather-sunny
+                    - type: template
+                      content: >-
+                        Tramonto  {% if states.sun.sun %} {{
+                        (as_timestamp(states.sun.sun.attributes.next_setting)) |
+                        timestamp_custom(('%H:%M') )}} {% endif %}
+                      icon: mdi:weather-sunset-down
+                  alignment: center
